@@ -23,6 +23,7 @@ import com.yandex.mapkit.layers.ObjectEvent
 import com.yandex.mapkit.map.CameraPosition
 import com.yandex.mapkit.map.InputListener
 import com.yandex.mapkit.map.Map
+import com.yandex.mapkit.map.MapObjectTapListener
 import com.yandex.mapkit.mapview.MapView
 import com.yandex.mapkit.user_location.UserLocationLayer
 import com.yandex.mapkit.user_location.UserLocationObjectListener
@@ -63,6 +64,13 @@ class MapFragment : Fragment() {
             }
             userLocation.setObjectListener(null)
         }
+    }
+
+    private val viewModel by viewModels<MapViewModel>()
+
+    private val placeTapListener = MapObjectTapListener { mapObject, _ ->
+        viewModel.deletePlaceById(mapObject.userData as Long)
+        true
     }
 
     private val permissionLauncher =
@@ -120,19 +128,22 @@ class MapFragment : Fragment() {
             map.addInputListener(listener)
 
             val collection = map.mapObjects.addCollection()
-            val viewModel by viewModels<MapViewModel>()
             viewLifecycleOwner.lifecycle.coroutineScope.launchWhenStarted {
                 viewModel.places.collectLatest { places ->
-                    places.forEach {
+                    collection.clear()
+                    places.forEach { place ->
                         val placeBinding = PlaceBinding.inflate(layoutInflater)
-                        placeBinding.title.text = it.name
+                        placeBinding.title.text = place.name
                         collection.addPlacemark(
-                            Point(it.lat, it.long),
+                            Point(place.lat, place.long),
                             ViewProvider(placeBinding.root)
-                        )
+                        ).apply {
+                            userData = place.id
+                        }
                     }
                 }
             }
+            collection.addTapListener(placeTapListener)
 
             // Переход к точке на карте после клика на списке
             val arguments = arguments
