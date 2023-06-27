@@ -1,7 +1,6 @@
 package ru.netology.yamaps.ui
 
 import android.Manifest
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.Menu
@@ -30,10 +29,10 @@ import com.yandex.mapkit.user_location.UserLocationObjectListener
 import com.yandex.mapkit.user_location.UserLocationView
 import com.yandex.runtime.ui_view.ViewProvider
 import kotlinx.coroutines.flow.collectLatest
-import ru.netology.yamaps.viewmodel.MapViewModel
 import ru.netology.yamaps.R
 import ru.netology.yamaps.databinding.MapFragmentBinding
 import ru.netology.yamaps.databinding.PlaceBinding
+import ru.netology.yamaps.viewmodel.MapViewModel
 
 class MapFragment : Fragment() {
 
@@ -77,8 +76,6 @@ class MapFragment : Fragment() {
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             when {
                 granted -> {
-                    userLocation.isVisible = true
-                    userLocation.isHeadingEnabled = false
                     userLocation.cameraPosition()?.target?.also {
                         val map = mapView?.map ?: return@registerForActivityResult
                         val cameraPosition = map.cameraPosition
@@ -92,6 +89,7 @@ class MapFragment : Fragment() {
                         )
                     }
                 }
+
                 else -> {
                     Toast.makeText(
                         requireContext(),
@@ -116,14 +114,8 @@ class MapFragment : Fragment() {
 
         mapView = binding.map.apply {
             userLocation = MapKitFactory.getInstance().createUserLocationLayer(mapWindow)
-            if (requireActivity()
-                    .checkSelfPermission(
-                        Manifest.permission.ACCESS_FINE_LOCATION
-                    ) == PackageManager.PERMISSION_GRANTED
-            ) {
-                userLocation.isVisible = true
-                userLocation.isHeadingEnabled = false
-            }
+            userLocation.isVisible = true
+            userLocation.isHeadingEnabled = false
 
             map.addInputListener(listener)
 
@@ -174,7 +166,7 @@ class MapFragment : Fragment() {
                     binding.map.map.cameraPosition.target,
                     binding.map.map.cameraPosition.zoom + 1, 0.0f, 0.0f
                 ),
-                Animation(Animation.Type.SMOOTH, 1F),
+                Animation(Animation.Type.SMOOTH, 0.3F),
                 null
             )
         }
@@ -185,7 +177,7 @@ class MapFragment : Fragment() {
                     binding.map.map.cameraPosition.target,
                     binding.map.map.cameraPosition.zoom - 1, 0.0f, 0.0f
                 ),
-                Animation(Animation.Type.SMOOTH, 1F),
+                Animation(Animation.Type.SMOOTH, 0.3F),
                 null,
             )
         }
