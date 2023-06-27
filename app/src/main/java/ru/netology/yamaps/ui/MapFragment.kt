@@ -13,7 +13,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.coroutineScope
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.yandex.mapkit.Animation
 import com.yandex.mapkit.MapKitFactory
@@ -29,6 +31,7 @@ import com.yandex.mapkit.user_location.UserLocationObjectListener
 import com.yandex.mapkit.user_location.UserLocationView
 import com.yandex.runtime.ui_view.ViewProvider
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import ru.netology.yamaps.R
 import ru.netology.yamaps.databinding.MapFragmentBinding
 import ru.netology.yamaps.databinding.PlaceBinding
@@ -120,17 +123,19 @@ class MapFragment : Fragment() {
             map.addInputListener(listener)
 
             val collection = map.mapObjects.addCollection()
-            viewLifecycleOwner.lifecycle.coroutineScope.launchWhenStarted {
-                viewModel.places.collectLatest { places ->
-                    collection.clear()
-                    places.forEach { place ->
-                        val placeBinding = PlaceBinding.inflate(layoutInflater)
-                        placeBinding.title.text = place.name
-                        collection.addPlacemark(
-                            Point(place.lat, place.long),
-                            ViewProvider(placeBinding.root)
-                        ).apply {
-                            userData = place.id
+            viewLifecycleOwner.lifecycleScope.launch {
+                repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    viewModel.places.collectLatest { places ->
+                        collection.clear()
+                        places.forEach { place ->
+                            val placeBinding = PlaceBinding.inflate(layoutInflater)
+                            placeBinding.title.text = place.name
+                            collection.addPlacemark(
+                                Point(place.lat, place.long),
+                                ViewProvider(placeBinding.root)
+                            ).apply {
+                                userData = place.id
+                            }
                         }
                     }
                 }
