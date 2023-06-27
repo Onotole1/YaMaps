@@ -79,6 +79,7 @@ class MapFragment : Fragment() {
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             when {
                 granted -> {
+                    MapKitFactory.getInstance().resetLocationManagerToDefault()
                     userLocation.cameraPosition()?.target?.also {
                         val map = mapView?.map ?: return@registerForActivityResult
                         val cameraPosition = map.cameraPosition
